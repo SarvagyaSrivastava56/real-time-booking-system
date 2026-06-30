@@ -1,5 +1,6 @@
 package com.event.booking.websocket;
 
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -17,6 +18,11 @@ public class EventWebSocketHandler extends TextWebSocketHandler {
 
     // Map from eventId -> Set of active WebSocketSession connections
     private final Map<String, Set<WebSocketSession>> eventSessions = new ConcurrentHashMap<>();
+    private final StringRedisTemplate redisTemplate;
+
+    public EventWebSocketHandler(StringRedisTemplate redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -41,11 +47,21 @@ public class EventWebSocketHandler extends TextWebSocketHandler {
     }
 
     /**
-     * Broadcasts a seat update notification to all clients currently viewing the event details page.
+     * Broadcasts a seat update notification to the Redis Pub/Sub topic.
      *
      * @param eventId the event ID whose seat status changed
      */
     public void broadcastSeatUpdate(String eventId) {
+        redisTemplate.convertAndSend("channel:seat-updates", eventId);
+    }
+
+    /**
+     * Broadcasts a seat update notification to all local WebSocket sessions.
+     * Called by the RedisSubscriber when a message is received.
+     *
+     * @param eventId the event ID whose seat status changed
+     */
+    public void broadcastSeatUpdateLocally(String eventId) {
         Set<WebSocketSession> sessions = eventSessions.get(eventId);
         if (sessions != null) {
             TextMessage message = new TextMessage("{\"type\":\"SEAT_UPDATE\",\"eventId\":\"" + eventId + "\"}");

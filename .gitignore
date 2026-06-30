@@ -17,3 +17,5 @@ Thumbs.db
 walkthrough.md
 task.md
 implementation_plan.md
+*.tex
+*.pdf
