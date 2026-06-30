@@ -1,0 +1,19 @@
+# Build and dependency directories
+node_modules/
+target/
+dist/
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# IDE and Project Tooling Files
+.idea/
+.vscode/
+*.iml
+.system_generated/
+.gemini/
+*.log
+walkthrough.md
+task.md
+implementation_plan.md
